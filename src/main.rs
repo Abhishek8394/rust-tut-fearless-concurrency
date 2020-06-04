@@ -3,7 +3,7 @@ mod deadlock;
 use std::sync::{mpsc, Mutex, Arc};
 use std::thread;
 use std::time::Duration;
-use crate::deadlock::deadlock_demo;
+use crate::deadlock::{solved_deadlock_demo, deadlock_demo};
 
 fn start_thread(name: String) -> thread::JoinHandle<()>{
     let handle =  thread::spawn(move ||{
@@ -110,7 +110,10 @@ fn main() {
     }
 
     {
-        println!("deadlock demo");
-        deadlock_demo();
+        println!("\nsolved deadlock demo");
+        solved_deadlock_demo();
+        // uncomment below lines to view deadlock happen.
+        // println!("\nunsolved deadlock demo");
+        // deadlock_demo();
     }
 }
