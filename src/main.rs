@@ -1,6 +1,9 @@
-use std::sync::mpsc;
+mod deadlock;
+
+use std::sync::{mpsc, Mutex, Arc};
 use std::thread;
 use std::time::Duration;
+use crate::deadlock::deadlock_demo;
 
 fn start_thread(name: String) -> thread::JoinHandle<()>{
     let handle =  thread::spawn(move ||{
@@ -9,7 +12,7 @@ fn start_thread(name: String) -> thread::JoinHandle<()>{
             thread::sleep(Duration::from_millis(1));
         }
     });
-    /// below will error, we already moved name in closure above.
+    // below will error, we already moved name in closure above.
     // drop(name);
     return handle;
 }
@@ -76,5 +79,38 @@ fn main() {
         for received in rx {
             println!("Got: {}", received);
         }
+    }
+
+    {
+        println!("mutex demo");
+        let m = Mutex::new(5);
+        {
+            // mutex.lock returns LockResult<MutexGuard> and calling unwrap returns
+            // MutexGuard a smart pointer.
+            // The lock is auto released when MutexGuard goes out of scope.
+            let mut num = m.lock().unwrap();
+            *num = 10;
+        }
+        println!("m = {:?}", m);
+
+        let counter = Arc::new(Mutex::new(0));
+        let mut handles = vec![];
+        for i in 0..10{
+            let c = Arc::clone(&counter);
+            let h = thread::spawn(move ||{
+                let mut n = c.lock().unwrap();
+                *n += 1;
+            });
+            handles.push(h);
+        }
+        for h in handles{
+            h.join().unwrap();
+        }
+        println!("counter: {:?}", counter.lock().unwrap());
+    }
+
+    {
+        println!("deadlock demo");
+        deadlock_demo();
     }
 }
