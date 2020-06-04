@@ -116,4 +116,28 @@ fn main() {
         // println!("\nunsolved deadlock demo");
         // deadlock_demo();
     }
+
+    {
+        println!("\nSend and Sync Trait demo");
+        let mut i: i32 = 5;
+        // using *j below will not work because &mut i32 does not not implement
+        // Sync and Send traits.
+        // let j = &mut i;
+        let h1 = thread::spawn(move ||{
+            println!("h1 {:?}", i);
+            // thread::sleep(Duration::from_millis(30));
+            i += 1;
+            println!("h1 {:?}", i);
+        });
+
+        let h2 = thread::spawn(move ||{
+            thread::sleep(Duration::from_millis(29));
+            println!("h2 {:?}", i);
+            i += 1;
+            println!("h2 {:?}", i);
+        });
+
+        h1.join().unwrap();
+        h2.join().unwrap();
+    }
 }
